@@ -16,34 +16,6 @@ A progressive path-connecting puzzle game with procedurally generated levels.
 - **Celebration Effects**: Confetti and sound on completion
 - **Premium UI**: Modern design with smooth animations
 
-## 🚀 Quick Start
-
-### Prerequisites
-- Node.js (v16 or higher)
-- npm or yarn
-
-### Installation
-
-```bash
-# Clone the repository
-git clone https://github.com/YOUR_USERNAME/infinite-path-puzzle.git
-cd infinite-path-puzzle
-
-# Install dependencies
-npm install
-
-# Run development server
-npm run dev
-```
-
-Visit `http://localhost:5173` to play!
-
-### Build for Production
-
-```bash
-npm run build
-```
-
 ## 🎯 How to Play
 
 1. **Draw** a path by clicking/dragging through the grid
