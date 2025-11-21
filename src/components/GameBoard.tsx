@@ -1,0 +1,205 @@
+import React, { useState, useRef } from 'react';
+import { GameState, Position } from '../types';
+
+interface GameBoardProps {
+    gameState: GameState;
+    onDragStart: (position: Position) => void;
+    onDragMove: (position: Position) => void;
+    onDragEnd: () => void;
+    hintCells: Position[];
+}
+
+/**
+ * GameBoard Component
+ * Renders the puzzle grid with SVG for smooth visuals
+ */
+export const GameBoard: React.FC<GameBoardProps> = ({
+    gameState,
+    onDragStart,
+    onDragMove,
+    onDragEnd,
+    hintCells,
+}) => {
+    const [isDragging, setIsDragging] = useState(false);
+    const svgRef = useRef<SVGSVGElement>(null);
+
+    const cellSize = 60; // Base size for each cell
+    const cellGap = 8;
+    const cellRadius = 12;
+    const boardSize = gameState.gridSize * (cellSize + cellGap) - cellGap;
+
+    const isHintCell = (row: number, col: number): boolean => {
+        return hintCells.some(hint => hint.row === row && hint.col === col);
+    };
+
+    /**
+     * Get cell position from pointer coordinates
+     */
+    const getCellFromPointer = (e: React.PointerEvent<SVGSVGElement>): Position | null => {
+        if (!svgRef.current) return null;
+
+        const svg = svgRef.current;
+        const rect = svg.getBoundingClientRect();
+
+        // Calculate scale factor
+        const scaleX = boardSize / rect.width;
+        const scaleY = boardSize / rect.height;
+
+        // Get coordinates relative to SVG
+        const x = (e.clientX - rect.left) * scaleX;
+        const y = (e.clientY - rect.top) * scaleY;
+
+        // Calculate which cell the pointer is over
+        const col = Math.floor(x / (cellSize + cellGap));
+        const row = Math.floor(y / (cellSize + cellGap));
+
+        if (row >= 0 && row < gameState.gridSize && col >= 0 && col < gameState.gridSize) {
+            return { row, col };
+        }
+
+        return null;
+    };
+
+    const handlePointerDown = (e: React.PointerEvent<SVGSVGElement>, row?: number, col?: number) => {
+        e.preventDefault();
+        setIsDragging(true);
+
+        // If row and col are provided, use them (from direct cell click)
+        if (row !== undefined && col !== undefined) {
+            onDragStart({ row, col });
+        } else {
+            // Otherwise, calculate from pointer position
+            const cell = getCellFromPointer(e);
+            if (cell) {
+                onDragStart(cell);
+            }
+        }
+    };
+
+    const handlePointerMove = (e: React.PointerEvent<SVGSVGElement>) => {
+        if (!isDragging) return;
+
+        e.preventDefault();
+        const cell = getCellFromPointer(e);
+        if (cell) {
+            onDragMove(cell);
+        }
+    };
+
+    const handlePointerUp = (e: React.PointerEvent<SVGSVGElement>) => {
+        e.preventDefault();
+        setIsDragging(false);
+        onDragEnd();
+    };
+
+    const handlePointerLeave = (e: React.PointerEvent<SVGSVGElement>) => {
+        if (isDragging) {
+            e.preventDefault();
+            setIsDragging(false);
+            onDragEnd();
+        }
+    };
+
+    return (
+        <div className="flex items-center justify-center p-4">
+            <svg
+                ref={svgRef}
+                width={boardSize}
+                height={boardSize}
+                className="touch-none select-none"
+                onPointerDown={handlePointerDown}
+                onPointerMove={handlePointerMove}
+                onPointerUp={handlePointerUp}
+                onPointerLeave={handlePointerLeave}
+                style={{ maxWidth: '90vw', maxHeight: '60vh' }}
+            >
+                {/* Render grid cells */}
+                {gameState.grid.map((row, rowIndex) =>
+                    row.map((cell, colIndex) => {
+                        const x = colIndex * (cellSize + cellGap);
+                        const y = rowIndex * (cellSize + cellGap);
+                        const isHint = isHintCell(rowIndex, colIndex);
+
+                        if (!cell.isPath) return null;
+
+                        return (
+                            <g key={`${rowIndex}-${colIndex}`}>
+                                {/* Cell background */}
+                                <rect
+                                    x={x}
+                                    y={y}
+                                    width={cellSize}
+                                    height={cellSize}
+                                    rx={cellRadius}
+                                    ry={cellRadius}
+                                    fill={cell.isVisited ? '#1E90FF' : '#2C3E50'}
+                                    stroke={isHint ? '#FFD700' : 'none'}
+                                    strokeWidth={isHint ? 3 : 0}
+                                    className={`transition-all duration-200 ${cell.isVisited ? 'glow' : ''
+                                        } ${isHint ? 'glow-strong' : ''}`}
+                                    style={{ cursor: 'pointer' }}
+                                />
+
+                                {/* Waypoint number */}
+                                {cell.waypoint && (
+                                    <>
+                                        <circle
+                                            cx={x + cellSize / 2}
+                                            cy={y + cellSize / 2}
+                                            r={18}
+                                            fill="#000000"
+                                            stroke={
+                                                cell.waypoint === gameState.currentWaypoint
+                                                    ? '#FFD700'
+                                                    : cell.waypoint < gameState.currentWaypoint
+                                                        ? '#00FF00'
+                                                        : '#FFFFFF'
+                                            }
+                                            strokeWidth={cell.waypoint === gameState.currentWaypoint ? 3 : 2}
+                                            className={
+                                                cell.waypoint === gameState.currentWaypoint
+                                                    ? 'animate-pulse'
+                                                    : ''
+                                            }
+                                        />
+                                        <text
+                                            x={x + cellSize / 2}
+                                            y={y + cellSize / 2}
+                                            textAnchor="middle"
+                                            dominantBaseline="central"
+                                            fill="#FFFFFF"
+                                            fontSize="16"
+                                            fontWeight="bold"
+                                            style={{ pointerEvents: 'none', userSelect: 'none' }}
+                                        >
+                                            {cell.waypoint}
+                                        </text>
+                                    </>
+                                )}
+                            </g>
+                        );
+                    })
+                )}
+
+                {/* Draw connecting lines between visited cells */}
+                {gameState.playerPath.length > 1 && (
+                    <path
+                        d={gameState.playerPath
+                            .map((pos, index) => {
+                                const x = pos.col * (cellSize + cellGap) + cellSize / 2;
+                                const y = pos.row * (cellSize + cellGap) + cellSize / 2;
+                                return `${index === 0 ? 'M' : 'L'} ${x} ${y}`;
+                            })
+                            .join(' ')}
+                        stroke="#4DA6FF"
+                        strokeWidth="4"
+                        fill="none"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        style={{ pointerEvents: 'none' }}
+                    />
+                )}
+            </svg>
+        </div>
+    );
+};
