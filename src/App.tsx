@@ -47,15 +47,15 @@ function App() {
     }, [gameState.isComplete]);
 
     return (
-        <div className="min-h-screen w-full flex flex-col items-center justify-center p-4 bg-gradient-to-br from-gray-900 via-blue-900 to-gray-900">
+        <div className="min-h-screen w-full flex flex-col items-center justify-center p-2 sm:p-4 bg-gradient-to-br from-gray-900 via-blue-900 to-gray-900">
             {/* Confetti celebration */}
             {showConfetti && <Confetti />}
             {/* Header */}
-            <header className="mb-6">
-                <h1 className="text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-cyan-300 to-blue-500 mb-2">
+            <header className="mb-4 sm:mb-6">
+                <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-cyan-300 to-blue-500 mb-1 sm:mb-2">
                     Infinite Path Puzzle
                 </h1>
-                <p className="text-gray-400 text-center text-sm">
+                <p className="text-gray-400 text-center text-xs sm:text-sm">
                     Draw. Connect. Conquer. • Master the infinite maze!
                 </p>
             </header>
@@ -64,7 +64,7 @@ function App() {
             <StageInfo gameState={gameState} />
 
             {/* Game Board */}
-            <div className="bg-gray-800 rounded-3xl shadow-2xl p-6 mb-6">
+            <div className="bg-gray-800 rounded-2xl sm:rounded-3xl shadow-2xl p-3 sm:p-6 mb-4 sm:mb-6 w-full max-w-2xl">
                 <GameBoard
                     gameState={gameState}
                     onDragStart={handleDragStart}
@@ -85,25 +85,25 @@ function App() {
             />
 
             {/* Instructions */}
-            <div className="mt-8 max-w-md text-center">
-                <details className="bg-gray-800 rounded-xl p-4 cursor-pointer">
-                    <summary className="text-white font-semibold mb-2">
+            <div className="mt-4 sm:mt-8 max-w-md text-center px-2">
+                <details className="bg-gray-800 rounded-xl p-3 sm:p-4 cursor-pointer">
+                    <summary className="text-white font-semibold text-sm sm:text-base mb-2">
                         How to Play
                     </summary>
-                    <div className="text-gray-300 text-sm space-y-2 text-left">
+                    <div className="text-gray-300 text-xs sm:text-sm space-y-2 text-left">
                         <p>🎯 <strong>Goal:</strong> Connect all numbered dots in order (1→2→3...) by drawing a path.</p>
                         <p>✏️ <strong>Draw:</strong> Click/tap and drag to draw your path through the grid.</p>
                         <p>↩️ <strong>Backtrack:</strong> Drag backwards over your path to undo moves - no button needed!</p>
                         <p>📍 <strong>Rules:</strong> You must hit each numbered waypoint in sequence.</p>
                         <p>✅ <strong>Win:</strong> Complete the level by hitting all waypoints in order.</p>
-                        <p>💡 <strong>Hint:</strong> Shows you the next valid cells to help you progress.</p>
-                        <p>🎮 <strong>Difficulty:</strong> Grids get larger and patterns get more complex as you advance!</p>
+                        <p className="hidden sm:block">💡 <strong>Hint:</strong> Shows you the next valid cells to help you progress.</p>
+                        <p className="hidden sm:block">🎮 <strong>Difficulty:</strong> Grids get larger and patterns get more complex as you advance!</p>
                     </div>
                 </details>
             </div>
 
             {/* Footer */}
-            <footer className="mt-8 text-gray-500 text-xs text-center">
+            <footer className="mt-4 sm:mt-8 text-gray-500 text-xs text-center px-2">
                 <div>
                     © 2025 Infinite Path Puzzle — A product by{' '}
                     <a
