@@ -10,14 +10,10 @@ import { Position, Cell, DifficultyConfig, Direction } from '../types';
  */
 
 export class PathGenerator {
-    private grid: boolean[][];
-    private path: Position[];
     private size: number;
 
     constructor(size: number) {
         this.size = size;
-        this.grid = Array(size).fill(null).map(() => Array(size).fill(false));
-        this.path = [];
     }
 
     /**
