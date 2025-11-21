@@ -42,6 +42,8 @@ export const GameBoard: React.FC<GameBoardProps> = ({
         const rect = svg.getBoundingClientRect();
 
         // Calculate scale factor
+        // This maps the client coordinates (relative to the SVG's rendered size)
+        // back to the SVG's internal viewBox coordinates.
         const scaleX = boardSize / rect.width;
         const scaleY = boardSize / rect.height;
 
@@ -101,17 +103,16 @@ export const GameBoard: React.FC<GameBoardProps> = ({
     };
 
     return (
-        <div className="flex items-center justify-center p-4">
+        <div className="flex items-center justify-center w-full">
             <svg
                 ref={svgRef}
-                width={boardSize}
-                height={boardSize}
-                className="touch-none select-none"
+                viewBox={`0 0 ${boardSize} ${boardSize}`}
+                className="touch-none select-none w-full h-auto max-w-full"
                 onPointerDown={handlePointerDown}
                 onPointerMove={handlePointerMove}
                 onPointerUp={handlePointerUp}
                 onPointerLeave={handlePointerLeave}
-                style={{ maxWidth: '90vw', maxHeight: '60vh' }}
+                style={{ maxHeight: '70vh' }}
             >
                 {/* Render grid cells */}
                 {gameState.grid.map((row, rowIndex) =>
