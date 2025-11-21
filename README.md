@@ -4,10 +4,6 @@ A progressive path-connecting puzzle game with procedurally generated levels.
 
 ![Game Preview](https://img.shields.io/badge/React-18.2-blue) ![TypeScript](https://img.shields.io/badge/TypeScript-5.2-blue) ![Vite](https://img.shields.io/badge/Vite-5.0-purple) ![TailwindCSS](https://img.shields.io/badge/TailwindCSS-3.3-cyan)
 
-## 🎮 Play Now
-
-[**Play the Game →**](https://your-vercel-url.vercel.app)
-
 ## ✨ Features
 
 - **Procedural Generation**: Every level is algorithmically generated
