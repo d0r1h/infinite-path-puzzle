@@ -229,9 +229,45 @@ export class PathGenerator {
     }
 
     /**
-     * Create a grid with the given path marked
+     * Generate blocked cells that create obstacles
+     * Ensures blockers don't block waypoints or make puzzle unsolvable
      */
-    static createGrid(size: number, path: Position[]): Cell[][] {
+    static generateBlockers(
+        path: Position[],
+        waypoints: Map<number, Position>,
+        count: number
+    ): Position[] {
+        if (count === 0 || path.length === 0) return [];
+
+        const blockers: Position[] = [];
+        const waypointPositions = new Set(Array.from(waypoints.values()).map(p => `${p.row},${p.col}`));
+
+        // Get all path cells that are not waypoints
+        const candidateCells = path.filter(pos => {
+            const key = `${pos.row},${pos.col}`;
+            return !waypointPositions.has(key);
+        });
+
+        // Randomly select cells to block
+        const shuffled = [...candidateCells];
+        for (let i = shuffled.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+        }
+
+        // Take up to 'count' cells, ensuring we don't block too many
+        const maxBlockers = Math.min(count, Math.floor(candidateCells.length * 0.3));
+        for (let i = 0; i < maxBlockers && i < shuffled.length; i++) {
+            blockers.push(shuffled[i]);
+        }
+
+        return blockers;
+    }
+
+    /**
+     * Create a grid with the given path marked and blockers placed
+     */
+    static createGrid(size: number, path: Position[], blockedCells: Position[] = []): Cell[][] {
         const grid: Cell[][] = [];
 
         // Initialize empty grid
@@ -250,6 +286,13 @@ export class PathGenerator {
         for (const pos of path) {
             if (pos.row >= 0 && pos.row < size && pos.col >= 0 && pos.col < size) {
                 grid[pos.row][pos.col].isPath = true;
+            }
+        }
+
+        // Mark blocked cells
+        for (const pos of blockedCells) {
+            if (pos.row >= 0 && pos.row < size && pos.col >= 0 && pos.col < size) {
+                grid[pos.row][pos.col].isBlocked = true;
             }
         }
 
@@ -289,13 +332,22 @@ export function getDifficultyForStage(stage: number): DifficultyConfig {
         pathPattern = patterns[stage % 4];
     }
 
-    // Obstacles (future feature)
-    const hasObstacles = stage >= 15;
+    // Blockers - progressive difficulty from Stage 5
+    let blockerCount = 0;
+    if (stage >= 5 && stage <= 7) blockerCount = 2;
+    else if (stage >= 8 && stage <= 10) blockerCount = 4;
+    else if (stage >= 11 && stage <= 13) blockerCount = 6;
+    else if (stage >= 14 && stage <= 15) blockerCount = 8;
+    else if (stage >= 16) blockerCount = 10; // For edge blocker stages, keep some cell blockers too
+
+    // Obstacles flag (for future edge blockers)
+    const hasObstacles = stage >= 16;
 
     return {
         gridSize,
         waypointCount,
         pathPattern,
         hasObstacles,
+        blockerCount,
     };
 }

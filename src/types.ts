@@ -12,6 +12,7 @@ export interface Cell {
     isPath: boolean;
     isVisited: boolean;
     waypoint?: number; // If this cell has a numbered waypoint
+    isBlocked?: boolean; // If this cell is blocked and cannot be visited
 }
 
 export interface GameState {
@@ -31,6 +32,7 @@ export interface DifficultyConfig {
     waypointCount: number;
     pathPattern: 'spiral' | 'serpentine' | 'zigzag' | 'random';
     hasObstacles: boolean;
+    blockerCount: number; // Number of blocked cells
 }
 
 export type Direction = 'up' | 'down' | 'left' | 'right';

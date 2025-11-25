@@ -1,14 +1,48 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { GameState, Position } from '../types';
 import { PathGenerator, getDifficultyForStage } from '../logic/PathGenerator';
+
+const STORAGE_KEY = 'infinite-path-puzzle-stage';
+
+/**
+ * Load saved stage from localStorage
+ */
+function loadSavedStage(): number {
+    try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+            const stage = parseInt(saved, 10);
+            return stage > 0 ? stage : 1;
+        }
+    } catch (error) {
+        console.error('Failed to load saved stage:', error);
+    }
+    return 1;
+}
+
+/**
+ * Save current stage to localStorage
+ */
+function saveStage(stage: number): void {
+    try {
+        localStorage.setItem(STORAGE_KEY, stage.toString());
+    } catch (error) {
+        console.error('Failed to save stage:', error);
+    }
+}
 
 /**
  * Custom hook for managing game state
  * Handles level generation, player input, validation, and progression
  */
 export function useGame() {
-    const [gameState, setGameState] = useState<GameState>(() => initializeLevel(1));
+    const [gameState, setGameState] = useState<GameState>(() => initializeLevel(loadSavedStage()));
     const [isDragging, setIsDragging] = useState(false);
+
+    // Save stage whenever it changes
+    useEffect(() => {
+        saveStage(gameState.stage);
+    }, [gameState.stage]);
 
     /**
      * Initialize a new level based on stage number
@@ -18,12 +52,34 @@ export function useGame() {
         const generator = new PathGenerator(difficulty.gridSize);
         const path = generator.generatePath(difficulty.pathPattern);
         const waypoints = PathGenerator.placeWaypoints(path, difficulty.waypointCount);
-        const grid = PathGenerator.createGrid(difficulty.gridSize, path);
 
-        // Add waypoints to grid cells
+        // Generate blockers for stages 5+
+        const blockedCells = PathGenerator.generateBlockers(
+            path,
+            waypoints,
+            difficulty.blockerCount
+        );
+
+        console.log('🔴 Blocker Debug:', {
+            stage,
+            blockerCount: difficulty.blockerCount,
+            generatedBlockers: blockedCells.length,
+            blockerPositions: blockedCells.map(p => `(${p.row},${p.col})`),
+            waypointPositions: Array.from(waypoints.values()).map(p => `(${p.row},${p.col})`)
+        });
+
+        const grid = PathGenerator.createGrid(difficulty.gridSize, path, blockedCells);
+
+        // Add waypoints to grid cells and ensure they're not blocked
         waypoints.forEach((pos, waypointNum) => {
             if (grid[pos.row] && grid[pos.row][pos.col]) {
+                const wasBlocked = grid[pos.row][pos.col].isBlocked;
                 grid[pos.row][pos.col].waypoint = waypointNum;
+                grid[pos.row][pos.col].isBlocked = false; // Ensure waypoints are never blocked
+
+                if (wasBlocked) {
+                    console.warn(`⚠️ Waypoint ${waypointNum} at (${pos.row},${pos.col}) was blocked - now cleared`);
+                }
             }
         });
 
@@ -67,8 +123,8 @@ export function useGame() {
 
             const cell = prev.grid[position.row][position.col];
 
-            // Cell must be on the path
-            if (!cell.isPath) return prev;
+            // Cell must be on the path and not blocked
+            if (!cell.isPath || cell.isBlocked) return prev;
 
             // If this is the first cell, just add it
             if (prev.playerPath.length === 0) {

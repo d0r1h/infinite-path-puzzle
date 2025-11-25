@@ -6,7 +6,6 @@ interface GameBoardProps {
     onDragStart: (position: Position) => void;
     onDragMove: (position: Position) => void;
     onDragEnd: () => void;
-    hintCells: Position[];
 }
 
 /**
@@ -18,19 +17,16 @@ export const GameBoard: React.FC<GameBoardProps> = ({
     onDragStart,
     onDragMove,
     onDragEnd,
-    hintCells,
 }) => {
     const [isDragging, setIsDragging] = useState(false);
     const svgRef = useRef<SVGSVGElement>(null);
 
-    const cellSize = 60; // Base size for each cell
-    const cellGap = 8;
-    const cellRadius = 12;
+    const cellSize = 45; // Base size for each cell
+    const cellGap = 6;
+    const cellRadius = 10;
     const boardSize = gameState.gridSize * (cellSize + cellGap) - cellGap;
 
-    const isHintCell = (row: number, col: number): boolean => {
-        return hintCells.some(hint => hint.row === row && hint.col === col);
-    };
+
 
     /**
      * Get cell position from pointer coordinates
@@ -119,7 +115,6 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                     row.map((cell, colIndex) => {
                         const x = colIndex * (cellSize + cellGap);
                         const y = rowIndex * (cellSize + cellGap);
-                        const isHint = isHintCell(rowIndex, colIndex);
 
                         if (!cell.isPath) return null;
 
@@ -133,13 +128,34 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                                     height={cellSize}
                                     rx={cellRadius}
                                     ry={cellRadius}
-                                    fill={cell.isVisited ? '#1E90FF' : '#2C3E50'}
-                                    stroke={isHint ? '#FFD700' : 'none'}
-                                    strokeWidth={isHint ? 3 : 0}
-                                    className={`transition-all duration-200 ${cell.isVisited ? 'glow' : ''
-                                        } ${isHint ? 'glow-strong' : ''}`}
-                                    style={{ cursor: 'pointer' }}
+                                    fill={cell.isBlocked ? '#8B0000' : cell.isVisited ? '#1E90FF' : '#2C3E50'}
+                                    className={`transition-all duration-200 ${cell.isVisited ? 'glow' : ''}`}
+                                    style={{ cursor: cell.isBlocked ? 'not-allowed' : 'pointer' }}
                                 />
+
+                                {/* Blocked cell indicator (X pattern) */}
+                                {cell.isBlocked && (
+                                    <>
+                                        <line
+                                            x1={x + 8}
+                                            y1={y + 8}
+                                            x2={x + cellSize - 8}
+                                            y2={y + cellSize - 8}
+                                            stroke="#FFFFFF"
+                                            strokeWidth={3}
+                                            opacity={0.6}
+                                        />
+                                        <line
+                                            x1={x + cellSize - 8}
+                                            y1={y + 8}
+                                            x2={x + 8}
+                                            y2={y + cellSize - 8}
+                                            stroke="#FFFFFF"
+                                            strokeWidth={3}
+                                            opacity={0.6}
+                                        />
+                                    </>
+                                )}
 
                                 {/* Waypoint number */}
                                 {cell.waypoint && (
@@ -149,19 +165,8 @@ export const GameBoard: React.FC<GameBoardProps> = ({
                                             cy={y + cellSize / 2}
                                             r={18}
                                             fill="#000000"
-                                            stroke={
-                                                cell.waypoint === gameState.currentWaypoint
-                                                    ? '#FFD700'
-                                                    : cell.waypoint < gameState.currentWaypoint
-                                                        ? '#00FF00'
-                                                        : '#FFFFFF'
-                                            }
-                                            strokeWidth={cell.waypoint === gameState.currentWaypoint ? 3 : 2}
-                                            className={
-                                                cell.waypoint === gameState.currentWaypoint
-                                                    ? 'animate-pulse'
-                                                    : ''
-                                            }
+                                            stroke="#FFFFFF"
+                                            strokeWidth={2}
                                         />
                                         <text
                                             x={x + cellSize / 2}
